@@ -26,6 +26,18 @@ class Task(TimeStampModel):
     status = models.CharField(max_length=12, choices=Statuses)
     deadline = models.DateTimeField()
 
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = 'task_manager_task'
+        ordering = ['-created_at']
+        verbose_name = 'Task'
+        # либо unique=True в качестве аргумента в CharField
+        constraints = [
+            models.UniqueConstraint(fields=['title'], name='unique_task_title'),
+        ]
+
 
 class SubTask(TimeStampModel):
     title = models.CharField(max_length=30, validators=[MinLengthValidator(5)])
@@ -34,6 +46,27 @@ class SubTask(TimeStampModel):
     status = models.CharField(max_length=11, choices=Statuses)
     deadline = models.DateTimeField()
 
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        db_table = 'task_manager_subtask'
+        ordering = ['-created_at']
+        verbose_name = 'SubTask'
+        constraints = [
+            models.UniqueConstraint(fields=['title'], name='unique_subtask_title'),
+        ]
+
 
 class Category(TimeStampModel):
     name = models.CharField(max_length=30, validators=[MinLengthValidator(3)])
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'task_manager_category'
+        verbose_name = 'Category'
+        constraints = [
+            models.UniqueConstraint(fields=['name'], name='unique_category_name'),
+        ]
