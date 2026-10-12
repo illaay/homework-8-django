@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinLengthValidator
 from django.utils import timezone
+from django.conf import settings
 
 from .managers import CategoryManager
 
@@ -28,6 +29,10 @@ class Task(TimeStampModel):
     categories = models.ManyToManyField('Category', related_name='tasks')
     status = models.CharField(max_length=12, choices=Statuses)
     deadline = models.DateTimeField()
+    # null для совмести с имеющимися записями, чтобы заново сейчас не наполнять бд + для свободы в админке
+    # в других моделях так же
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                              related_name='tasks', null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -48,6 +53,8 @@ class SubTask(TimeStampModel):
     task = models.ForeignKey('Task', related_name='subtasks', on_delete=models.CASCADE)
     status = models.CharField(max_length=11, choices=Statuses)
     deadline = models.DateTimeField()
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                              related_name='subtasks', null=True, blank=True)
 
     def __str__(self):
         return self.title

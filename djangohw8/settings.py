@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
+    'drf_yasg',
 
     'apps.tasks.apps.TasksConfig',
 ]
@@ -83,6 +84,10 @@ WSGI_APPLICATION = 'djangohw8.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
+    # по умолчанию сортировка у cursorpaginator по 'created',
+    # поэтому на будущее переопределен класс, чтобы сортировка была по 'created_at', если будет потребность
+    # (нужно для views, в которых не задан ordering = , но тогда не будет работать ?ordering у других view)
+    # 'DEFAULT_PAGINATION_CLASS': 'apps.tasks.paginators.cursor.CreatedAtCursorPagination',
     'PAGE_SIZE': 5,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -101,6 +106,18 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Enter token in format: Bearer <access_token>',
+        },
+    },
+    'USE_SESSION_AUTH': False,
 }
 
 LOGGING = {

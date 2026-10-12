@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
+from .permissions import IsOwner
 from .filters import TaskFilter, SubTaskFilter
 from .models import Task, Statuses, SubTask, Category
 from .serializers.tasks import TaskSerializer, TaskCreateSerializer, TaskDetailSerializer
@@ -127,6 +128,7 @@ def task_stats(request):
 
 class TaskListCreateView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
+    permission_classes = [IsOwner]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = TaskFilter
     search_fields = ['title', 'description']
@@ -138,10 +140,14 @@ class TaskListCreateView(generics.ListCreateAPIView):
             return TaskCreateSerializer
         return TaskSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskCreateSerializer
+    permission_classes = [IsOwner]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = TaskFilter
     search_fields = ['title', 'description']
@@ -153,8 +159,24 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         return TaskCreateSerializer
 
 
+class MyTasksView(generics.ListAPIView):
+    serializer_class = TaskSerializer
+    permission_classes = [IsOwner]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = TaskFilter
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        # приходится так, потому что в сериализаторе в owner лежит именно username,
+        # но благодаря уникальности поля должно работать нормально
+        return Task.objects.filter(owner=self.request.user)
+
+
 class SubTaskListCreateView(generics.ListCreateAPIView):
     queryset = SubTask.objects.all()
+    permission_classes = [IsOwner]
     # pagination_class = SubTaskPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SubTaskFilter
@@ -167,9 +189,13 @@ class SubTaskListCreateView(generics.ListCreateAPIView):
             return SubTaskCreateSerializer
         return SubTaskSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
 
 class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
+    permission_classes = [IsOwner]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SubTaskFilter
     search_fields = ['title', 'description']
@@ -180,6 +206,19 @@ class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return SubTaskSerializer
         return SubTaskCreateSerializer
+
+
+class MySubTasksView(generics.ListAPIView):
+    serializer_class = SubTaskSerializer
+    permission_classes = [IsOwner]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = TaskFilter
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return SubTask.objects.filter(owner=self.request.user)
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
