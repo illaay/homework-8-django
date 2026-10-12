@@ -1,17 +1,18 @@
 from django.db.models import Count
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 
 from .filters import TaskFilter, SubTaskFilter
-from .models import Task, Statuses, SubTask
+from .models import Task, Statuses, SubTask, Category
 from .serializers.tasks import TaskSerializer, TaskCreateSerializer, TaskDetailSerializer
 from .serializers.subtasks import SubTaskCreateSerializer, SubTaskSerializer
+from .serializers.categories import CategorySerializer
 from .paginators.subtask import SubTaskPagination
 
 
@@ -178,3 +179,17 @@ class SubTaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if self.request.method == 'GET':
             return SubTaskSerializer
         return SubTaskCreateSerializer
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+    @action(detail=False, methods=['get'], url_path='count-tasks')
+    def count_tasks(self, request):
+        categories = (
+            Category.objects
+            .annotate(tasks_count=Count('tasks'))
+            .values('id', 'name', 'tasks_count')
+        )
+        return Response(list(categories))
