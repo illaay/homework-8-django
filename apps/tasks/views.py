@@ -13,7 +13,7 @@ from .models import Task, Statuses, SubTask, Category
 from .serializers.tasks import TaskSerializer, TaskCreateSerializer, TaskDetailSerializer
 from .serializers.subtasks import SubTaskCreateSerializer, SubTaskSerializer
 from .serializers.categories import CategorySerializer
-from .paginators.subtask import SubTaskPagination
+# from .paginators.subtask import SubTaskPagination
 
 
 # @api_view(['POST'])
@@ -154,7 +154,7 @@ class TaskRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
 
 class SubTaskListCreateView(generics.ListCreateAPIView):
     queryset = SubTask.objects.all()
-    pagination_class = SubTaskPagination
+    # pagination_class = SubTaskPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = SubTaskFilter
     search_fields = ['title', 'description']

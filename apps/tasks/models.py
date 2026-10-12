@@ -63,6 +63,7 @@ class SubTask(TimeStampModel):
 
 class Category(TimeStampModel):
     name = models.CharField(max_length=30, validators=[MinLengthValidator(3)])
+    # можно в виде property, но сделал, как сказано в условии
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
